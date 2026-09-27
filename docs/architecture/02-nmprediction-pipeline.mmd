@@ -1,0 +1,23 @@
+flowchart LR
+    subgraph S1["Steps 1–2: Impute"]
+        direction TB
+        A["Collect records S(m, n)<br/>+ decision column"] --> B{"Missing<br/>values?"}
+        B -- yes --> C["NMI imputation<br/>non_parametric_imputation"]
+        B -- no --> C2["Use data as-is"]
+    end
+
+    subgraph S2["Step 3: Influential features"]
+        direction TB
+        D["GA wrapper search<br/>chromosome = feature subset<br/>Pc = 1.0 · Pm = 0.001"] -- candidate --> E["Fitness = 3-fold CV accuracy<br/>of ADT − size penalty"]
+        E -- next generation --> D
+        E -- best subset --> F["Influential features"]
+    end
+
+    subgraph S3["Steps 4–8: Evaluate"]
+        direction TB
+        G["Stratified 10-fold<br/>train ADT on T_k, score R_k"] --> H["Pool labels L<br/>and scores P"]
+        H --> I["Accuracy · AUC · SE · SP"]
+        J["Hold-out: fit ADT on train,<br/>score validation / test"]
+    end
+
+    S1 --> S2 --> S3

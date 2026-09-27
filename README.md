@@ -58,6 +58,8 @@ Missing attribute values can be imputed first with **NMI** (`non_parametric_impu
 
 ## Layout
 
+Architecture diagrams (system overview, NMPrediction pipeline, GA wrapper, module dependencies, data protocol, evaluation, imputation benchmark, CI/CD): [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md), rendered images in [`docs/architecture/`](docs/architecture/), and slides in [`docs/DengueCAD_Architecture_Slides.pptx`](docs/DengueCAD_Architecture_Slides.pptx) ([PDF](docs/DengueCAD_Architecture_Slides.pdf)).
+
 ```
 denguecad/
   nm_prediction.py         # Algorithm 1 — NMPrediction

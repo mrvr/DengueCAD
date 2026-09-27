@@ -1,0 +1,14 @@
+flowchart LR
+    DS["Training dataset"] --> BL["Baselines, same 10 folds<br/>C4.5 · LOR · SVM (RBF)"]
+    DS --> NM["NMPrediction<br/>NMI → GA+ADT → 10-fold ADT"]
+    BL --> T1["Table I<br/>Accuracy · SE · SP · AUC"]
+    NM --> T1
+    BL --> FA["Per-fold accuracies"]
+    NM --> FA
+    FA --> T2["Table II<br/>Wilcoxon signed-rank<br/>NM vs each baseline"]
+    NM --> T3["Table III<br/>influential features"]
+    NM --> HO["Hold-out metrics<br/>validation · test"]
+    T1 --> PDF["Comparison PDF<br/>red = best<br/>green = NM when not best"]
+    T2 --> PDF
+    T3 --> PDF
+    HO --> PDF

@@ -1,0 +1,25 @@
+flowchart LR
+    scripts["scripts/run_*.py"] --> comparison
+    scripts --> data_splits
+    scripts --> arff_io
+    scripts --> imputation_benchmark
+    scripts --> missforest_impute
+
+    comparison --> nm_prediction
+    comparison --> baselines
+    comparison --> data_splits
+    comparison --> metrics
+
+    nm_prediction --> feature_selection
+    nm_prediction --> baselines
+    nm_prediction --> metrics
+    nm_prediction --> nmi_support
+
+    feature_selection --> classifiers
+    feature_selection --> nmi_support
+
+    baselines --> adt
+    classifiers --> adt
+
+    imputation_benchmark --> nmi_support
+    nmi_support -.->|"NMI_ROOT or ../NMI"| nmilib[("NMI: nmilib.py")]

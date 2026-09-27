@@ -1,0 +1,6 @@
+flowchart LR
+    F["dengue.csv<br/>1,000,000 rows"] --> T["Rows 0 – 69,999<br/>single training set 'dengue'<br/>NMI + NMPrediction + baselines<br/>(10-fold CV)"]
+    F --> Rm["Rows 70,000 onward"]
+    Rm --> CC["Drop records with any<br/>missing value (complete-case)"]
+    CC --> V["First 10,000<br/>validation"]
+    CC --> Te["Next 20,000<br/>test (reported performance)"]

@@ -1,0 +1,43 @@
+flowchart TB
+    subgraph Inputs["Data sources (data/)"]
+        direction TB
+        D1["dengue.csv<br/>1M rows, 4 binary symptoms"]
+        D2["dataset.csv<br/>Bangladesh dengue"]
+        D3["Dengue_clinical_dataset.csv<br/>clinical + hematology"]
+        D4["KEEL / Weka ARFF<br/>11 disease datasets"]
+        D5["missforest_iris/iris.csv"]
+    end
+
+    subgraph Scripts["Experiment runners (scripts/)"]
+        direction TB
+        S1["run_nm_comparison"]
+        S2["run_nm_on_dataset_csv<br/>run_nm_on_clinical"]
+        S3["run_arff_disease_benchmark"]
+        S4["run_imputation_comparison<br/>run_missforest_comparison"]
+    end
+
+    subgraph Core["denguecad package"]
+        direction LR
+        IO["Loading & splits<br/>data_splits · arff_io<br/>imputation_benchmark"]
+        IMP["Imputation<br/>NMI · MICE · kNN<br/>Mean/Mode · MissForest"]
+        NM["NMPrediction<br/>(Algorithm 1)<br/>nm_prediction"]
+        FS["GA wrapper<br/>feature_selection"]
+        CLF["Learners<br/>adt · baselines<br/>classifiers"]
+        EVAL["Evaluation<br/>metrics · comparison"]
+        IO --> IMP --> NM --> FS --> CLF --> EVAL
+    end
+
+    subgraph NMI["NMI library (sibling repo)"]
+        N1["nmilib.non_parametric_imputation"]
+    end
+
+    subgraph Outputs["Outputs"]
+        direction LR
+        R["results/*.csv<br/>(git-ignored)"]
+        P["DengueCAD_Performance_Comparisons.pdf"]
+        R --> P
+    end
+
+    Inputs --> Scripts --> Core
+    Core --> Outputs
+    Core -.->|"nmi_support"| NMI

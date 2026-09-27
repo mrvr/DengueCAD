@@ -1,0 +1,13 @@
+flowchart LR
+    M["Complete-case master<br/>dataset.csv / Iris"] --> MASK["Inject MCAR missingness<br/>on attributes only"]
+    MASK --> NMI["NM (NMI)"]
+    MASK --> MF["MissForest"]
+    MASK --> MICE["MICE<br/>IterativeImputer"]
+    MASK --> KNN["kNN"]
+    MASK --> SIMPLE["Mean · Median · Mode"]
+    NMI --> SC["Imputation accuracy<br/>vs ground truth<br/>(exact for categorical,<br/>5% tolerance for real)"]
+    MF --> SC
+    MICE --> SC
+    KNN --> SC
+    SIMPLE --> SC
+    SC --> DOWN["Downstream CV accuracy<br/>ADT · C4.5 · LOR · SVM"]

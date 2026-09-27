@@ -1,0 +1,7 @@
+flowchart LR
+    P["git push / pull request<br/>to main"] --> I["Inspect tests<br/>scripts/inspect_tests.py"]
+    I --> U["Unit tests<br/>pytest -m unit"]
+    I --> S["System tests<br/>clone NMI, pytest -m system"]
+    U --> G{"All green and<br/>push to main?"}
+    S --> G
+    G -- yes --> Rel["GitHub Release<br/>semver patch bump"]

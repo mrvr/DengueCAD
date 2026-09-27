@@ -1,0 +1,29 @@
+flowchart TB
+    subgraph Init["Initialise"]
+        I1["Random chromosomes<br/>~30% bits on"]
+        I2["Seed: all features<br/>+ one sparse subset"]
+    end
+
+    subgraph Eval["Evaluate (wrapper)"]
+        direction LR
+        EV["Mask X to<br/>selected columns"] --> CV["Stratified k-fold CV<br/>ADT / SVM / tree"]
+        CV --> FIT["fitness = CV accuracy (or AUC)<br/>− penalty × subset size / n"]
+        FIT --> BEST["Track best chromosome<br/>+ per-generation history"]
+    end
+
+    subgraph Evolve["Evolve next generation"]
+        direction LR
+        EL["Elitism:<br/>keep top 2"] --> TS["Tournament<br/>selection, size 3"]
+        TS --> CX["One-point crossover<br/>Pc = 1.0"]
+        CX --> MU["Bit-flip mutation<br/>Pm = 0.001"]
+        MU --> MIN["Enforce ≥<br/>min_features bits"]
+    end
+
+    subgraph Out["Result"]
+        OUT["WrapperGAResult<br/>selected_features · cv_score · history"]
+    end
+
+    Init --> Eval
+    Eval -- "more generations" --> Evolve
+    Evolve --> Eval
+    Eval -- "generations exhausted" --> Out
