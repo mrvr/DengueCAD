@@ -10,3 +10,4 @@ build/
 *.log
 .coverage
 htmlcov/
+results/

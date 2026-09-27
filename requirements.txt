@@ -2,4 +2,10 @@ pandas
 numpy
 scikit-learn
 matplotlib
+scipy
 pytest
+openpyxl
+MissForest
+lightgbm
+tqdm
+reportlab

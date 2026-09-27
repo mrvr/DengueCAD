@@ -42,7 +42,7 @@ class GAWrapperConfig:
     scoring: str = "accuracy"  # "accuracy" | "auc"
     # Soft preference for compact subsets (Kohavi–John Occam bias)
     subset_size_penalty: float = 0.001
-    classifier: str = "svm"  # "svm" | "tree"
+    classifier: str = "svm"  # "svm" | "tree" | "adt"
     random_state: int = 42
     min_features: int = 1
     verbose: bool = False

@@ -2,7 +2,42 @@
 
 Based on IEEE paper IEEEITBM 2012 *"A New Intelligence Based Approach for Computer-Aided Diagnosis of Dengue Fever"* (Rao & Kumar, IEEE TITB / JBHI).
 
-This project builds on the sibling **NMI** imputation library ([mrvr/NMI](https://github.com/mrvr/NMI.git)) and implements **Section C — Identification of influential features**: a *wrapper* subset evaluation model driven by a **genetic algorithm**.
+This project builds on the sibling **NMI** imputation library ([mrvr/NMI](https://github.com/mrvr/NMI.git)) and implements:
+
+1. **Section C** — GA wrapper influential-feature selection  
+2. **Algorithm 1 (`NMPrediction`)** — NMI imputation → GA+ADT feature selection → stratified *k*-fold ADT → AUC / SE / SP  
+3. **Baselines** — C4.5, SVM (RBF), LOR — compared via Table I / Wilcoxon Table II / influential features Table III  
+
+## NMPrediction (Algorithm 1)
+
+```text
+Input:  S(m,n), attribute types
+Output: Accuracy, AUC, SE, SP
+
+1. Collect records in S
+2. Impute missing values (NMI / Section III-B)
+3. Extract influential features (wrapper + genetic search; ADT evaluates subsets)
+4. Stratified k-fold into T_k / R_k
+5. For each fold: train ADT on T_k; score R_k → P; collect labels → L
+6. Repeat for all folds
+7–8. Compute AUC, SE, SP from (L, P); return
+```
+
+## Experiment protocol (`data/dengue.csv`)
+
+| Split | Rows | Role |
+|-------|------|------|
+| dengue (train) | first 70 000 (single dataset) | Apply NMI / NMPrediction (+ baselines) |
+| validation | next complete-case block → 10 000 | Hold-out validation (no MVs) |
+| test | next complete-case block → 20 000 | Hold-out test / performance (no MVs) |
+
+```bash
+source .venv/bin/activate
+python scripts/run_nm_comparison.py
+# writes results/table1_performance.csv, table2_wilcoxon.csv, table3_influential_features.csv
+```
+
+> Note: vendored `dengue.csv` has four binary symptoms only (not the paper’s 16 clinical/lab attributes), so numeric Table I values will not reproduce the IEEE tables; the **pipeline and report format** match Algorithm 1 / Tables I–III.
 
 ## Method (Section C)
 
@@ -16,7 +51,7 @@ Paper GA settings (Section V):
 |-----------|-------|
 | Crossover probability \(P_c\) | 1.0 |
 | Mutation probability \(P_m\) | 0.001 |
-| Inner learner (experiments) | SVM-RBF (LibSVM) |
+| Wrapper / final learner (Algorithm 1) | Alternating Decision Tree (ADT) |
 | CV | Stratified 10-fold |
 
 Missing attribute values can be imputed first with **NMI** (`non_parametric_imputation`) before the wrapper run.
@@ -24,19 +59,18 @@ Missing attribute values can be imputed first with **NMI** (`non_parametric_impu
 ## Layout
 
 ```
-denguecad/                 # library code
-scripts/
-  run_influential_features.py
-  inspect_tests.py         # CI test-validity gate
-  next_version.py          # semver bump for releases
-  ci_local.sh              # run the same gates as CI
-tests/
-  unit/                    # fast unit tests
-  system/                  # NMI + dengue end-to-end tests
-data/                      # vendored dengue.csv + data*.txt (from NMI)
-.github/workflows/ci.yml   # GitHub Actions CI + release (no Jenkins required)
-docs/TESTING.md
-VERSION                    # semver baseline (e.g. 0.1.0)
+denguecad/
+  nm_prediction.py         # Algorithm 1 — NMPrediction
+  adt.py                   # Alternating Decision Tree
+  baselines.py             # C4.5, SVM, LOR
+  comparison.py            # Tables I–III + Wilcoxon
+  data_splits.py           # 70k single train / 10k val / 20k test
+  feature_selection.py     # GA wrapper
+  …
+scripts/run_nm_comparison.py
+results/                   # generated comparison CSVs
+data/                      # dengue.csv + data*.txt
+.github/workflows/ci.yml
 ```
 
 ## Setup (project virtual environment)
@@ -130,3 +164,7 @@ bash scripts/ci_local.sh
 2. K. Ron (Kohavi) & H. J. George (John), “Wrappers for feature subset selection,” *Artificial Intelligence*, vol. 97, pp. 273–324, 1997.
 3. D. E. Goldberg, *Genetic Algorithms in Search, Optimization and Machine Learning*, 1989.
 4. NMI library: https://github.com/mrvr/NMI.git
+
+External dengue datasets, portals, and challenges: [`docs/REFERENCES.md`](docs/REFERENCES.md).
+
+Performance comparison PDF (dengue + non-dengue tables): [`docs/DengueCAD_Performance_Comparisons.pdf`](docs/DengueCAD_Performance_Comparisons.pdf).
