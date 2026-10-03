@@ -169,6 +169,7 @@ flowchart LR
 | `data_splits.py` | `dengue.csv` protocol: 70k train, 10k validation, 20k test |
 | `imputation_benchmark.py` | CSV loading/encoding, MCAR masking, NMI / MICE / kNN / Mean-Mode imputers |
 | `missforest_impute.py` | Random-forest iterative imputation (MissForest) |
+| `holdout_experiment.py` | valid_set / imputed train_set / hidden-decision protocol; imputation and prediction accuracy |
 | `arff_io.py` | ARFF loader tolerant of KEEL `NUMERIC [min, max]` ranges |
 | `nmi_support.py` | Locates and imports `nmilib` from the NMI checkout |
 
@@ -235,7 +236,9 @@ flowchart LR
 | `run_arff_disease_benchmark.py` | 11 disease ARFFs | `arff_disease_comparison/` |
 | `run_imputation_comparison.py` | `dataset.csv` + MCAR | `imputation_dataset_csv/` |
 | `run_missforest_comparison.py` | Iris + 20% MCAR | `missforest_comparison/` |
+| `run_holdout_imputation_prediction.py` | 5 dengue sets + 11 ARFFs (20% records masked, 30% hold-out, 20% hidden decisions) | `holdout_imputation_prediction/{dengue,multi}/` |
 | `build_comparison_pdf.py` | all of the above | `docs/DengueCAD_Performance_Comparisons.pdf` |
+| `build_holdout_comparison_pdf.py` | hold-out results | `docs/DengueCAD_Imputation_Prediction_Holdout.pdf` |
 
 ## 9. CI/CD
 

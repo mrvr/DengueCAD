@@ -99,32 +99,26 @@ class NMPrediction:
         out[list(feature_cols)] = imputed[list(feature_cols)]
         return out
 
-    def fit_predict_cv(
+    @staticmethod
+    def _default_features(df: pd.DataFrame, decision_col: str) -> list[str]:
+        return [
+            c
+            for c in df.columns
+            if c != decision_col and str(c).lower() not in {"name", "id"}
+        ]
+
+    def _impute_and_select(
         self,
         data: pd.DataFrame,
-        *,
         decision_col: str,
-        feature_cols: Optional[Sequence[str]] = None,
-    ) -> NMPredictionResult:
-        """
-        Run Algorithm 1 on dataset ``S`` and return CV performance + features.
-        """
+        feature_cols: Sequence[str],
+    ) -> tuple[pd.DataFrame, list[str]]:
+        """Steps 1–3: collect, NMI-impute, GA + ADT wrapper feature selection."""
         cfg = self.config
         df = pd.DataFrame(data).copy()
-        if feature_cols is None:
-            feature_cols = [
-                c
-                for c in df.columns
-                if c != decision_col and str(c).lower() not in {"name", "id"}
-            ]
-        feature_cols = list(feature_cols)
-        n_original = len(feature_cols)
-
-        # Steps 1–2: collect + impute
         df = df.dropna(subset=[decision_col]).reset_index(drop=True)
         df = self._impute(df, decision_col, feature_cols)
 
-        # Step 3: wrapper GA + ADT evaluation model
         ga_cfg = cfg.ga
         ga_cfg.classifier = "adt"
         ga_cfg.impute_missing = False  # already imputed
@@ -140,9 +134,48 @@ class NMPrediction:
             config=ga_cfg,
             classifier_factory=lambda: make_adt(cfg.random_state),
         )
-        selected = wrap.selected_features or feature_cols
+        selected = wrap.selected_features or list(feature_cols)
         if cfg.verbose:
             print(f"NMPrediction influential features: {selected}")
+        return df, list(selected)
+
+    def fit(
+        self,
+        data: pd.DataFrame,
+        *,
+        decision_col: str,
+        feature_cols: Optional[Sequence[str]] = None,
+    ) -> "NMPrediction":
+        """Impute, select influential features, and train ADT on all of ``data``."""
+        feature_cols = list(feature_cols or self._default_features(data, decision_col))
+        df, selected = self._impute_and_select(data, decision_col, feature_cols)
+        use = df[[*selected, decision_col]].dropna()
+        adt = make_adt(self.config.random_state)
+        adt.set_params(n_estimators=self.config.adt_estimators)
+        adt.fit(use[selected].to_numpy(dtype=float), use[decision_col].to_numpy().astype(int))
+        self.selected_features_ = selected
+        self.model_ = adt
+        return self
+
+    def predict(self, data: pd.DataFrame) -> np.ndarray:
+        """Predict the decision for complete records using the fitted ADT."""
+        X = pd.DataFrame(data)[self.selected_features_].to_numpy(dtype=float)
+        return np.asarray(self.model_.predict(X)).astype(int)
+
+    def fit_predict_cv(
+        self,
+        data: pd.DataFrame,
+        *,
+        decision_col: str,
+        feature_cols: Optional[Sequence[str]] = None,
+    ) -> NMPredictionResult:
+        """
+        Run Algorithm 1 on dataset ``S`` and return CV performance + features.
+        """
+        cfg = self.config
+        feature_cols = list(feature_cols or self._default_features(data, decision_col))
+        n_original = len(feature_cols)
+        df, selected = self._impute_and_select(data, decision_col, feature_cols)
 
         # Steps 4–6: stratified k-fold ADT on selected features
         use = df[[*selected, decision_col]].dropna()

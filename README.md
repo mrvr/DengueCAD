@@ -170,3 +170,11 @@ bash scripts/ci_local.sh
 External dengue datasets, portals, and challenges: [`docs/REFERENCES.md`](docs/REFERENCES.md).
 
 Performance comparison PDF (dengue + non-dengue tables): [`docs/DengueCAD_Performance_Comparisons.pdf`](docs/DengueCAD_Performance_Comparisons.pdf).
+
+Imputation and prediction hold-out comparison (valid_set / NMI-imputed train_set / 20% hidden decisions; NMI vs MICE, kNN, MissForest, Mean/Mode and NMPrediction vs C4.5, LOR, SVM on dengue and multi-disease data): [`docs/DengueCAD_Imputation_Prediction_Holdout.pdf`](docs/DengueCAD_Imputation_Prediction_Holdout.pdf). Regenerate with:
+
+```bash
+python scripts/run_holdout_imputation_prediction.py --only dengue --outdir results/holdout_imputation_prediction/dengue
+python scripts/run_holdout_imputation_prediction.py --only multi --outdir results/holdout_imputation_prediction/multi
+python scripts/build_holdout_comparison_pdf.py
+```
