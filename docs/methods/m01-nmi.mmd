@@ -1,0 +1,20 @@
+flowchart TB
+    subgraph R1["1 · Prepare"]
+        direction LR
+        A["Dataset S<br/>(last column = decision)"] --> B["Complete rows = donors<br/>Incomplete rows = targets"]
+        B --> C["Take a target row R<sub>i</sub><br/>(its decision must be known)"]
+    end
+    subgraph R2["2 · Measure closeness to every donor R<sub>k</sub>"]
+        direction LR
+        D["Score each attribute<br/>I<sub>Cl</sub>(R<sub>i</sub>, R<sub>k</sub>)<br/>same class → Case I<br/>other class → Case II"] --> E["Distance<br/>d<sub>ik</sub> = √ Σ I<sub>Cl</sub>²"]
+        E --> F["z-score the distances<br/>z = (d − mean) / sd"]
+        F --> G["Neighbours =<br/>donors with z ≤ 0"]
+    end
+    subgraph R3["3 · Fill the gaps (repeat for every target row)"]
+        direction LR
+        H{"Type of the<br/>missing attribute?"} -- "categorical / integer" --> I["MODE of the<br/>neighbours' values"]
+        H -- "fractional / real" --> J["MEAN of the<br/>neighbours' values"]
+        I --> K["Imputed dataset"]
+        J --> K
+    end
+    R1 --> R2 --> R3

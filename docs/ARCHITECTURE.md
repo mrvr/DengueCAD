@@ -269,6 +269,7 @@ flowchart TB
 | `run_holdout_imputation_prediction.py` | 5 dengue sets + 11 ARFFs (20% records masked, 30% hold-out, 20% hidden decisions) | `holdout_imputation_prediction/{dengue,multi}/` |
 | `build_comparison_pdf.py` | all of the above | `docs/DengueCAD_Performance_Comparisons.pdf` |
 | `build_holdout_comparison_pdf.py` | hold-out results | `docs/DengueCAD_Imputation_Prediction_Holdout.pdf` |
+| `build_methods_guide_pdf.py` | `docs/methods/FLOWCHARTS.md` flowcharts | `docs/DengueCAD_Methods_Guide.pdf` |
 
 ## 10. CI/CD
 

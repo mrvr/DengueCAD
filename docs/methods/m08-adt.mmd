@@ -1,0 +1,15 @@
+flowchart TB
+    subgraph R1["1 · Training (boosting, 40 rounds in DengueCAD)"]
+        direction LR
+        A["Training rows,<br/>equal weights"] --> B["Find the best simple rule<br/>(stump, e.g. platelets &lt; 100k?)"]
+        B --> C["Attach rule with a score<br/>for YES and for NO"]
+        C --> D["Up-weight rows the<br/>model gets wrong"]
+        D -- "next round" --> B
+    end
+    subgraph R2["2 · Classify a patient"]
+        direction LR
+        F["Add the scores of every<br/>rule the patient meets"] --> G{"Total<br/>&gt; 0?"}
+        G -- "yes" --> H["Positive<br/>(dengue)"]
+        G -- "no" --> I["Negative"]
+    end
+    R1 --> R2

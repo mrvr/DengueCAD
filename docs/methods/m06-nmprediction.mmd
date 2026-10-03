@@ -1,0 +1,16 @@
+flowchart TB
+    subgraph R1["Training · steps 1–2"]
+        direction LR
+        A["Training data<br/>with missing values"] --> B["1 · Impute<br/>with NMI"]
+        B --> C["2 · GA wrapper picks<br/>influential features"]
+    end
+    subgraph R2["Training · steps 3–4"]
+        direction LR
+        D["3 · Train an Alternating<br/>Decision Tree (ADT)"] --> E["4 · Stratified 10-fold CV<br/>Accuracy · AUC · SE · SP"]
+    end
+    subgraph R3["Using the model"]
+        direction LR
+        F["New patient"] --> G["Keep the<br/>selected features"]
+        G --> H["ADT score"] --> I["Diagnosis"]
+    end
+    R1 --> R2 --> R3

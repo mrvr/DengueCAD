@@ -178,3 +178,10 @@ python scripts/run_holdout_imputation_prediction.py --only dengue --outdir resul
 python scripts/run_holdout_imputation_prediction.py --only multi --outdir results/holdout_imputation_prediction/multi
 python scripts/build_holdout_comparison_pdf.py
 ```
+
+Methods guide (plain-language explanation of NMI, MICE, kNN, MissForest, Mean/Mode, NMPrediction with its GA wrapper and ADT, C4.5, LOR and SVM, each with a flowchart, example, DengueCAD settings and references): [`docs/DengueCAD_Methods_Guide.pdf`](docs/DengueCAD_Methods_Guide.pdf). Flowchart sources are in [`docs/methods/FLOWCHARTS.md`](docs/methods/FLOWCHARTS.md). Regenerate with:
+
+```bash
+python scripts/render_architecture_diagrams.py --source docs/methods/FLOWCHARTS.md --outdir docs/methods
+python scripts/build_methods_guide_pdf.py
+```

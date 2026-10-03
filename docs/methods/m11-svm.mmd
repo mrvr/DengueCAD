@@ -1,0 +1,12 @@
+flowchart TB
+    subgraph R1["1 · Train"]
+        direction LR
+        A["Standardise<br/>features"] --> B["RBF kernel similarity<br/>K(x, x') = exp(−γ ‖x − x'‖²)"]
+        B --> C["Find the widest-margin<br/>boundary between classes<br/>(C = 1 balances margin vs errors)"]
+        C --> D["Rows on the margin =<br/>support vectors"]
+    end
+    subgraph R2["2 · Predict"]
+        direction LR
+        E["New record"] --> F["Weighted similarity to<br/>the support vectors"] --> G["Sign → class"]
+    end
+    R1 --> R2

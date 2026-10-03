@@ -1,0 +1,19 @@
+flowchart LR
+    D["Dataset with<br/>missing values"] --> IMP
+    subgraph IMP["Step 1 · Imputation"]
+        direction LR
+        I1["NMI (NM's imputer)"]
+        I2["MICE"]
+        I3["kNN"]
+        I4["MissForest"]
+        I5["Mean / Mode"]
+    end
+    IMP --> C["Complete<br/>dataset"] --> PRED
+    subgraph PRED["Step 2 · Prediction"]
+        direction LR
+        P1["NMPrediction<br/>(NMI + GA wrapper + ADT)"]
+        P2["C4.5 decision tree"]
+        P3["Logistic regression (LOR)"]
+        P4["SVM (RBF kernel)"]
+    end
+    PRED --> O["Diagnosis<br/>(decision column)"]

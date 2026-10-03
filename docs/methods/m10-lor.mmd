@@ -1,0 +1,13 @@
+flowchart TB
+    subgraph R1["1 · Fit (repeat until the weights stop changing)"]
+        direction LR
+        B["Standardise features<br/>(mean 0, sd 1)"] --> C["Score<br/>z = b<sub>0</sub> + b<sub>1</sub>x<sub>1</sub> + … + b<sub>p</sub>x<sub>p</sub>"]
+        C --> D["Probability<br/>p = 1 / (1 + e<sup>−z</sup>)"]
+        D --> E["Update weights b to fit<br/>the true labels better<br/>(L-BFGS, L2 penalty)"]
+        E -- "iterate" --> C
+    end
+    subgraph R2["2 · Predict"]
+        direction LR
+        F["New record"] --> G["p ≥ 0.5 → positive<br/>p &lt; 0.5 → negative"]
+    end
+    R1 --> R2

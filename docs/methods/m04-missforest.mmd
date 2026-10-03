@@ -1,0 +1,14 @@
+flowchart TB
+    subgraph R1["1 · Start"]
+        direction LR
+        A["Dataset with<br/>missing values"] --> B["Temporary fill:<br/>mean (numeric)<br/>mode (categorical)"]
+        B --> C["Order columns by<br/>number missing<br/>(fewest first)"]
+    end
+    subgraph R2["2 · One round (repeat until the change is tiny, max 5–6 rounds)"]
+        direction LR
+        D["Next column X<sub>j</sub>"] --> E["Train a random forest<br/>X<sub>j</sub> ~ other columns<br/>(rows with X<sub>j</sub> observed)"]
+        E --> F["Replace missing X<sub>j</sub><br/>with forest predictions"]
+        F --> G{"All columns<br/>done?"}
+        G -- "no" --> D
+    end
+    R1 --> R2 --> H["Imputed dataset"]

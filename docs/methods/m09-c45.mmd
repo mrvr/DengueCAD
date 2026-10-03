@@ -1,0 +1,13 @@
+flowchart TB
+    subgraph R1["1 · Grow the tree (start at the root with all rows)"]
+        direction LR
+        B{"All rows in this<br/>node same class?"} -- "no" --> C["Information gain (ratio)<br/>for every attribute"]
+        C --> D["Split on the best<br/>attribute / threshold"]
+        D -- "repeat for each child node" --> B
+        B -- "yes" --> L["Leaf = that class"]
+    end
+    subgraph R2["2 · Predict"]
+        direction LR
+        P["New record"] --> Q["Follow the tests from<br/>root to a leaf"] --> S["Leaf class"]
+    end
+    R1 --> R2

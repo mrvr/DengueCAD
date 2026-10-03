@@ -4,6 +4,8 @@ Render the Mermaid diagrams in docs/ARCHITECTURE.md to PNG and SVG.
 
 Each diagram is a ```mermaid block preceded by ``<!-- diagram: NAME -->``.
 Writes docs/architecture/NAME.{mmd,png,svg} using mermaid-cli via npx.
+Use --source / --outdir for other Markdown files (e.g. the methods guide
+flowcharts in docs/methods/FLOWCHARTS.md).
 
 Requires Node.js (npx) and a Chrome/Chromium binary; set CHROME_PATH to override
 auto-detection.
@@ -66,18 +68,21 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[1])
     parser.add_argument("--scale", type=float, default=3.0, help="PNG pixel scale")
     parser.add_argument("--only", nargs="*", help="Render only these diagram names")
+    parser.add_argument("--source", type=Path, default=SOURCE, help="Markdown file with tagged diagrams")
+    parser.add_argument("--outdir", type=Path, default=OUTDIR, help="Output directory")
     args = parser.parse_args()
+    outdir = args.outdir
 
     if not shutil.which("npx"):
         sys.exit("npx not found; install Node.js to render Mermaid diagrams.")
 
-    diagrams = extract_diagrams(SOURCE.read_text(encoding="utf-8"))
+    diagrams = extract_diagrams(args.source.read_text(encoding="utf-8"))
     if args.only:
         diagrams = [d for d in diagrams if d[0] in set(args.only)]
     if not diagrams:
-        sys.exit(f"No tagged mermaid blocks found in {SOURCE}")
+        sys.exit(f"No tagged mermaid blocks found in {args.source}")
 
-    OUTDIR.mkdir(parents=True, exist_ok=True)
+    outdir.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory() as tmp:
         tmp_path = Path(tmp)
         cfg = tmp_path / "mermaid.json"
@@ -87,10 +92,10 @@ def main() -> None:
 
         env = {**os.environ, "PUPPETEER_SKIP_DOWNLOAD": "1"}
         for name, body in diagrams:
-            src = OUTDIR / f"{name}.mmd"
+            src = outdir / f"{name}.mmd"
             src.write_text(body, encoding="utf-8")
             for ext, extra in (("png", ["-s", str(args.scale)]), ("svg", [])):
-                out = OUTDIR / f"{name}.{ext}"
+                out = outdir / f"{name}.{ext}"
                 cmd = [
                     "npx", "-y", "-p", MERMAID_CLI, "mmdc",
                     "-i", str(src), "-o", str(out),
@@ -99,7 +104,7 @@ def main() -> None:
                 subprocess.run(cmd, check=True, env=env, stdout=subprocess.DEVNULL)
             print(f"rendered {name}")
 
-    print(f"Wrote {len(diagrams)} diagrams to {OUTDIR}")
+    print(f"Wrote {len(diagrams)} diagrams to {outdir}")
 
 
 if __name__ == "__main__":

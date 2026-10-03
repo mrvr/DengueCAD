@@ -1,0 +1,13 @@
+flowchart TB
+    subgraph R1["1 · Start"]
+        direction LR
+        A["Random population<br/>of bit masks<br/>1 = keep · 0 = drop"] --> B["Fitness = 3-fold CV<br/>accuracy on kept features<br/>− small size penalty"]
+    end
+    subgraph R2["2 · Next generation (repeat for the set number of generations)"]
+        direction LR
+        C["Keep the 2 best<br/>(elitism)"] --> D["Pick parents<br/>(tournament of 3)"]
+        D --> E["Crossover<br/>Pc = 1.0"]
+        E --> F["Mutation<br/>Pm = 0.001"]
+        F --> G["Score the<br/>new masks"]
+    end
+    R1 --> R2 --> H["Best mask =<br/>influential features"]

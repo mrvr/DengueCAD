@@ -1,0 +1,12 @@
+flowchart TB
+    subgraph R1["1 · Find neighbours (for each missing cell in column X)"]
+        direction LR
+        A["Row with X<br/>missing"] --> B["Distance to all rows<br/>(nan-Euclidean: only<br/>columns both observe)"]
+        B --> C["Keep the k = 5<br/>closest rows that<br/>have X observed"]
+    end
+    subgraph R2["2 · Fill"]
+        direction LR
+        D["Weight each neighbour<br/>by 1 / distance"] --> E["X = weighted average<br/>of the neighbours"]
+        E --> G["Imputed dataset"]
+    end
+    R1 --> R2

@@ -1,0 +1,17 @@
+flowchart TB
+    subgraph R1["1 · Start"]
+        direction LR
+        A["Dataset with<br/>missing values"] --> B["Temporary fill:<br/>column mean"]
+    end
+    subgraph R2["2 · One round over the incomplete columns (repeat up to 20 rounds)"]
+        direction LR
+        C["Next column X<sub>j</sub>"] --> D["Fit a regression<br/>X<sub>j</sub> ~ other columns<br/>(rows where X<sub>j</sub> is observed)"]
+        D --> E["Predict X<sub>j</sub> where<br/>it was missing"]
+        E --> F{"All columns<br/>done?"}
+        F -- "no" --> C
+    end
+    subgraph R3["3 · Finish"]
+        direction LR
+        G{"Values stable?"} -- "yes" --> H["Imputed dataset"]
+    end
+    R1 --> R2 --> R3

@@ -1,0 +1,7 @@
+flowchart LR
+    A["Column with<br/>missing values"] --> B{"Column<br/>type?"}
+    B -- "numeric" --> C["Column MEAN<br/>(MEDIAN if skewed)"]
+    B -- "categorical" --> D["Column MODE<br/>(most frequent value)"]
+    C --> E["Write that single value<br/>into every missing cell"]
+    D --> E
+    E --> G["Imputed dataset<br/>(repeat per column)"]
