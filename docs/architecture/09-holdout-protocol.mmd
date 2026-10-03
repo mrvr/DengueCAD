@@ -1,0 +1,16 @@
+flowchart TB
+    V["valid_set<br/>complete records of dataset S<br/>(ground truth)"]
+    subgraph IPH["Imputation phase"]
+        direction LR
+        M["Mask 20% of records<br/>1–3 attributes each"] --> IMP["Impute<br/>NMI · MICE · kNN<br/>MissForest · Mean/Mode"]
+        IMP --> IA["1.1 / 2.1<br/>Imputation accuracy<br/>vs valid_set"]
+    end
+    subgraph PPH["Prediction phase"]
+        direction LR
+        HO["30% hold-out<br/>from valid_set"] --> HD["Hide decision on<br/>20% of hold-out"]
+        TR["train_set<br/>NMI-imputed minus<br/>30% hold-out"] --> P["Predict hidden decisions<br/>NMPrediction · C4.5<br/>LOR · SVM"]
+        HD --> P
+        P --> PA["1.2 / 2.2<br/>Prediction accuracy<br/>vs valid_set"]
+    end
+    V --> IPH
+    IPH -- "NMI-imputed dataset" --> PPH

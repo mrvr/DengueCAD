@@ -12,7 +12,7 @@ flowchart TB
         direction TB
         S1["run_nm_comparison"]
         S2["run_nm_on_dataset_csv<br/>run_nm_on_clinical"]
-        S3["run_arff_disease_benchmark"]
+        S3["run_arff_disease_benchmark<br/>run_holdout_imputation_prediction"]
         S4["run_imputation_comparison<br/>run_missforest_comparison"]
     end
 
@@ -34,7 +34,7 @@ flowchart TB
     subgraph Outputs["Outputs"]
         direction LR
         R["results/*.csv<br/>(git-ignored)"]
-        P["DengueCAD_Performance_Comparisons.pdf"]
+        P["PDF reports<br/>Performance_Comparisons ·<br/>Imputation_Prediction_Holdout"]
         R --> P
     end
 

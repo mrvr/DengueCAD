@@ -4,6 +4,12 @@ flowchart LR
     scripts --> arff_io
     scripts --> imputation_benchmark
     scripts --> missforest_impute
+    scripts --> holdout_experiment
+
+    holdout_experiment --> nm_prediction
+    holdout_experiment --> imputation_benchmark
+    holdout_experiment --> missforest_impute
+    holdout_experiment --> baselines
 
     comparison --> nm_prediction
     comparison --> baselines

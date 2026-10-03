@@ -27,7 +27,7 @@ flowchart TB
         direction TB
         S1["run_nm_comparison"]
         S2["run_nm_on_dataset_csv<br/>run_nm_on_clinical"]
-        S3["run_arff_disease_benchmark"]
+        S3["run_arff_disease_benchmark<br/>run_holdout_imputation_prediction"]
         S4["run_imputation_comparison<br/>run_missforest_comparison"]
     end
 
@@ -49,7 +49,7 @@ flowchart TB
     subgraph Outputs["Outputs"]
         direction LR
         R["results/*.csv<br/>(git-ignored)"]
-        P["DengueCAD_Performance_Comparisons.pdf"]
+        P["PDF reports<br/>Performance_Comparisons ·<br/>Imputation_Prediction_Holdout"]
         R --> P
     end
 
@@ -136,6 +136,12 @@ flowchart LR
     scripts --> arff_io
     scripts --> imputation_benchmark
     scripts --> missforest_impute
+    scripts --> holdout_experiment
+
+    holdout_experiment --> nm_prediction
+    holdout_experiment --> imputation_benchmark
+    holdout_experiment --> missforest_impute
+    holdout_experiment --> baselines
 
     comparison --> nm_prediction
     comparison --> baselines
@@ -226,7 +232,31 @@ flowchart LR
     SC --> DOWN["Downstream CV accuracy<br/>ADT · C4.5 · LOR · SVM"]
 ```
 
-## 8. Experiment runners and outputs
+## 8. Imputation + prediction hold-out experiment
+
+Runs on five dengue datasets and eleven disease ARFFs, repeated with different seeds (`holdout_experiment.py`, report `DengueCAD_Imputation_Prediction_Holdout.pdf`).
+
+<!-- diagram: 09-holdout-protocol -->
+```mermaid
+flowchart TB
+    V["valid_set<br/>complete records of dataset S<br/>(ground truth)"]
+    subgraph IPH["Imputation phase"]
+        direction LR
+        M["Mask 20% of records<br/>1–3 attributes each"] --> IMP["Impute<br/>NMI · MICE · kNN<br/>MissForest · Mean/Mode"]
+        IMP --> IA["1.1 / 2.1<br/>Imputation accuracy<br/>vs valid_set"]
+    end
+    subgraph PPH["Prediction phase"]
+        direction LR
+        HO["30% hold-out<br/>from valid_set"] --> HD["Hide decision on<br/>20% of hold-out"]
+        TR["train_set<br/>NMI-imputed minus<br/>30% hold-out"] --> P["Predict hidden decisions<br/>NMPrediction · C4.5<br/>LOR · SVM"]
+        HD --> P
+        P --> PA["1.2 / 2.2<br/>Prediction accuracy<br/>vs valid_set"]
+    end
+    V --> IPH
+    IPH -- "NMI-imputed dataset" --> PPH
+```
+
+## 9. Experiment runners and outputs
 
 | Script | Dataset | Output (under `results/`) |
 |--------|---------|---------------------------|
@@ -240,7 +270,7 @@ flowchart LR
 | `build_comparison_pdf.py` | all of the above | `docs/DengueCAD_Performance_Comparisons.pdf` |
 | `build_holdout_comparison_pdf.py` | hold-out results | `docs/DengueCAD_Imputation_Prediction_Holdout.pdf` |
 
-## 9. CI/CD
+## 10. CI/CD
 
 <!-- diagram: 08-ci-cd -->
 ```mermaid

@@ -126,9 +126,9 @@ def _picture_fit(slide, path: Path, left, top, width, height) -> None:
     )
 
 
-def _table(slide, rows: list[list[str]], left, top, width, col_widths: list[float], size=14):
+def _table(slide, rows: list[list[str]], left, top, width, col_widths: list[float], size=14, row_h=0.6):
     n_rows, n_cols = len(rows), len(rows[0])
-    shape = slide.shapes.add_table(n_rows, n_cols, left, top, width, Inches(0.6) * n_rows)
+    shape = slide.shapes.add_table(n_rows, n_cols, left, top, width, Inches(row_h) * n_rows)
     table = shape.table
     total = sum(col_widths)
     for j, w in enumerate(col_widths):
@@ -162,6 +162,7 @@ def build(out: Path) -> Path:
         "01-system-overview.png", "02-nmprediction-pipeline.png", "03-ga-wrapper.png",
         "04-module-dependencies.png", "05-dengue-data-protocol.png",
         "06-evaluation-flow.png", "07-imputation-benchmark.png", "08-ci-cd.png",
+        "09-holdout-protocol.png",
     ) if not (DIAGRAMS / p).is_file()]
     if missing:
         sys.exit(f"Missing diagrams {missing}; run scripts/render_architecture_diagrams.py first.")
@@ -208,6 +209,7 @@ def build(out: Path) -> Path:
         "Compares NM against C4.5, Logistic Regression (LOR) and SVM (RBF)",
         ("Table I performance · Table II Wilcoxon test · Table III influential features", 1),
         "Benchmarks imputation: NMI vs MissForest, MICE, kNN, Mean/Median/Mode",
+        ("Hold-out experiment: imputation accuracy and hidden-decision prediction accuracy", 1),
         "Disease-agnostic: dengue CSVs plus 11 KEEL / Weka ARFF disease datasets",
         "Reproducible: scripted experiments, generated PDF report, CI on every push",
     ], MARGIN + Inches(0.3), TITLE_H + Inches(0.4), SLIDE_W - 2 * MARGIN - Inches(0.6),
@@ -235,8 +237,8 @@ def build(out: Path) -> Path:
         ["Imputation", "nmi_support · imputation_benchmark · missforest_impute", "NMI, MICE, kNN, Mean/Mode, MissForest"],
         ["Algorithm", "nm_prediction · feature_selection", "NMPrediction (Algorithm 1), GA wrapper search"],
         ["Learners", "adt · baselines · classifiers", "ADT, C4.5, LOR, SVM (RBF), classifier factory"],
-        ["Evaluation", "metrics · comparison", "Accuracy/AUC/SE/SP, Tables I–III, Wilcoxon"],
-        ["Reporting", "scripts/build_comparison_pdf.py", "PDF with legend; red = best, green = NM when not best"],
+        ["Evaluation", "metrics · comparison · holdout_experiment", "Accuracy/AUC/SE/SP, Tables I–III, Wilcoxon, hold-out protocol"],
+        ["Reporting", "build_comparison_pdf · build_holdout_comparison_pdf", "Performance and hold-out PDF reports with highlighted best results"],
     ], MARGIN, TITLE_H + Inches(0.5), SLIDE_W - 2 * MARGIN, [1.3, 3.6, 4.6], size=18)
     _footer(s, n)
     _notes(s, "Each layer only depends on layers below it; the evaluation layer is what the "
@@ -267,8 +269,9 @@ def build(out: Path) -> Path:
     diagram_slide(
         prs, n, "Module dependencies", "04-module-dependencies.png",
         "Arrows point to imported modules. Only nmi_support touches the external NMI library.",
-        "comparison orchestrates NM and baselines. nm_prediction depends on feature_selection, "
-        "baselines, metrics and nmi_support. adt is shared by baselines and the GA classifier factory.",
+        "comparison orchestrates NM and baselines; holdout_experiment reuses nm_prediction, the "
+        "imputers and the baselines. nm_prediction depends on feature_selection, baselines, "
+        "metrics and nmi_support. adt is shared by baselines and the GA classifier factory.",
     )
 
     n += 1
@@ -299,7 +302,19 @@ def build(out: Path) -> Path:
         "cells must match exactly; real values within 5% relative tolerance.",
     )
 
-    # 11 — runners table
+    n += 1
+    diagram_slide(
+        prs, n, "Imputation + prediction hold-out experiment", "09-holdout-protocol.png",
+        "valid_set kept aside · 20% of records masked and imputed · NMI-imputed train_set · "
+        "decisions hidden on 20% of a 30% hold-out and predicted.",
+        "Run on five dengue datasets and eleven disease ARFFs, 10 seeds each (3 for the 70k "
+        "dengue.csv sample). Tables 1.1 and 2.1 score imputation of the masked cells, 1.2 and 2.2 "
+        "score prediction of the hidden decisions. Results are in "
+        "DengueCAD_Imputation_Prediction_Holdout.pdf.",
+        subtitle="holdout_experiment.py",
+    )
+
+    # runners table
     n += 1
     s = _blank(prs)
     _title_bar(s, "Experiment runners and outputs", "scripts/ → results/")
@@ -311,8 +326,10 @@ def build(out: Path) -> Path:
         ["run_arff_disease_benchmark.py", "11 disease ARFFs", "results/arff_disease_comparison/"],
         ["run_imputation_comparison.py", "dataset.csv + MCAR", "results/imputation_dataset_csv/"],
         ["run_missforest_comparison.py", "Iris + 20% MCAR", "results/missforest_comparison/"],
+        ["run_holdout_imputation_prediction.py", "5 dengue sets + 11 ARFFs", "results/holdout_imputation_prediction/"],
         ["build_comparison_pdf.py", "all results", "Performance comparison PDF (docs/)"],
-    ], MARGIN, TITLE_H + Inches(0.5), SLIDE_W - 2 * MARGIN, [3.2, 3.2, 4.2], size=17)
+        ["build_holdout_comparison_pdf.py", "hold-out results", "Imputation / prediction hold-out PDF (docs/)"],
+    ], MARGIN, TITLE_H + Inches(0.35), SLIDE_W - 2 * MARGIN, [3.6, 3.0, 4.0], size=15, row_h=0.5)
     _footer(s, n)
     _notes(s, "results/ is git-ignored; the PDF report is the committed record of performance.")
 
@@ -353,15 +370,19 @@ def build(out: Path) -> Path:
     )
     tf = box.text_frame
     tf.word_wrap = True
-    lines = [
-        "source .venv/bin/activate",
-        "python scripts/run_nm_comparison.py            # dengue.csv experiment",
-        "python scripts/run_arff_disease_benchmark.py   # multi-disease ARFFs",
-        "python scripts/build_comparison_pdf.py         # performance report",
-        "python scripts/render_architecture_diagrams.py # diagrams from ARCHITECTURE.md",
-        "python scripts/build_architecture_slides.py    # this deck",
-        "bash scripts/ci_local.sh                       # CI gates before push",
+    commands = [
+        ("source .venv/bin/activate", ""),
+        ("python scripts/run_nm_comparison.py", "dengue.csv experiment"),
+        ("python scripts/run_arff_disease_benchmark.py", "multi-disease ARFFs"),
+        ("python scripts/run_holdout_imputation_prediction.py", "hold-out experiment"),
+        ("python scripts/build_comparison_pdf.py", "performance report"),
+        ("python scripts/build_holdout_comparison_pdf.py", "hold-out report"),
+        ("python scripts/render_architecture_diagrams.py", "diagrams"),
+        ("python scripts/build_architecture_slides.py --pdf", "this deck"),
+        ("bash scripts/ci_local.sh", "CI gates before push"),
     ]
+    width = max(len(c) for c, _ in commands) + 1
+    lines = [f"{c:<{width}}# {note}" if note else c for c, note in commands]
     for i, line in enumerate(lines):
         p = tf.paragraphs[0] if i == 0 else tf.add_paragraph()
         p.space_after = Pt(10)
