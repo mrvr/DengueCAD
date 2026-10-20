@@ -222,9 +222,9 @@ def build(out: Path) -> Path:
     diagram_slide(
         prs, n, "System overview", "01-system-overview.png",
         "Data sources → experiment scripts → denguecad package → CSV results and PDF report; "
-        "imputation delegates to the sibling NMI library.",
+        "imputation uses the 2012 NMI procedure in denguecad.nmi_paper.",
         "Left to right: the data folder, the scripts that orchestrate each experiment, the "
-        "library layers, and outputs. NMI is a separate repository located via NMI_ROOT or ../NMI.",
+        "library layers, and outputs. NMI imputation calls impute_nmi (IEEE TITB 2012).",
     )
 
     # 4 — layers table
@@ -234,7 +234,7 @@ def build(out: Path) -> Path:
     _table(s, [
         ["Layer", "Modules", "Responsibility"],
         ["Data", "data_splits · arff_io · imputation_benchmark", "Load, encode, split (70k / 10k / 20k), ARFF with KEEL ranges"],
-        ["Imputation", "nmi_support · imputation_benchmark · missforest_impute", "NMI, MICE, kNN, Mean/Mode, MissForest"],
+        ["Imputation", "nmi_paper · imputation_benchmark · missforest_impute", "2012 NMI, MICE, kNN, Mean/Mode, MissForest"],
         ["Algorithm", "nm_prediction · feature_selection", "NMPrediction (Algorithm 1), GA wrapper search"],
         ["Learners", "adt · baselines · classifiers", "ADT, C4.5, LOR, SVM (RBF), classifier factory"],
         ["Evaluation", "metrics · comparison · holdout_experiment", "Accuracy/AUC/SE/SP, Tables I–III, Wilcoxon, hold-out protocol"],
@@ -268,10 +268,10 @@ def build(out: Path) -> Path:
     n += 1
     diagram_slide(
         prs, n, "Module dependencies", "04-module-dependencies.png",
-        "Arrows point to imported modules. Only nmi_support touches the external NMI library.",
+        "Arrows point to imported modules. NMI calls go to nmi_paper.impute_nmi.",
         "comparison orchestrates NM and baselines; holdout_experiment reuses nm_prediction, the "
         "imputers and the baselines. nm_prediction depends on feature_selection, baselines, "
-        "metrics and nmi_support. adt is shared by baselines and the GA classifier factory.",
+        "metrics and nmi_paper. adt is shared by baselines and the GA classifier factory.",
     )
 
     n += 1
@@ -338,7 +338,7 @@ def build(out: Path) -> Path:
         prs, n, "CI/CD", "08-ci-cd.png",
         "GitHub Actions on every push and pull request; a green push to main cuts a semver release.",
         "The same gates run locally with scripts/ci_local.sh before pushing. System tests "
-        "clone the NMI library and use the datasets in data/.",
+        "use the datasets in data/ and the in-tree 2012 NMI imputer.",
         subtitle="GitHub Actions",
     )
 
@@ -347,8 +347,8 @@ def build(out: Path) -> Path:
     s = _blank(prs)
     _title_bar(s, "Design decisions and extension points")
     _bullets(s, [
-        "NMI kept as an external library behind nmi_support",
-        ("Swap the checkout with NMI_ROOT; no code changes", 1),
+        "NMI imputation is the 2012 procedure in nmi_paper",
+        ("Call impute_nmi(data, decision_col, feature_cols)", 1),
         "Pluggable learners through factories (baselines, classifiers)",
         ("GA wrapper can evaluate with ADT, SVM or decision tree", 1),
         "Disease-agnostic data layer",

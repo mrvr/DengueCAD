@@ -1,4 +1,4 @@
-"""Checks for the 2012 and 2013 NMI implementations."""
+"""Checks for the 2012 NMI implementation used for imputation."""
 
 from __future__ import annotations
 
@@ -29,7 +29,7 @@ def test_2012_integer_column_uses_mode_of_neighbours():
     )
     masked = frame.copy()
     masked.loc[0, "symptom"] = pd.NA
-    filled = impute_nmi(masked, "decision", year=2012)
+    filled = impute_nmi(masked, "decision")
     # The target's lab value is absent from the complete donors, so every
     # index is 0, every donor is a neighbour, and the symptom mode is "b".
     assert filled.loc[0, "symptom"] == "b"
@@ -46,12 +46,12 @@ def test_2012_real_fill_is_the_neighbour_mean():
     )
     masked = frame.copy()
     masked.loc[0, "lab"] = np.nan
-    filled = impute_nmi(masked, "decision", year=2012)
+    filled = impute_nmi(masked, "decision")
     # Same-class donors are rows 1 and 2. The other class is farther (z > 0).
     assert filled.loc[0, "lab"] == pytest.approx((3.5 + 5.5) / 2.0)
 
 
-def test_2013_imputes_without_dropping_incomplete_donors():
+def test_2013_method_is_commented_out():
     frame = pd.DataFrame(
         {
             "symptom": ["a", "a", None, "b"],
@@ -59,8 +59,5 @@ def test_2013_imputes_without_dropping_incomplete_donors():
             "decision": [0, 0, 0, 1],
         }
     )
-    masked = frame.copy()
-    masked.loc[0, "symptom"] = np.nan
-    filled = impute_nmi(masked, "decision", year=2013)
-    assert pd.notna(filled.loc[0, "symptom"])
-    assert filled.loc[0, "lab"] == 1.0
+    with pytest.raises(TypeError):
+        impute_nmi(frame, "decision", year=2013)  # type: ignore[call-arg]

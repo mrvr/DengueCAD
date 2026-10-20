@@ -21,7 +21,8 @@ import numpy as np
 import pandas as pd
 
 from denguecad.holdout_experiment import inject_record_mcar
-from denguecad.nmi_paper import YEAR_2012, YEAR_2013, column_kind, impute_nmi
+from denguecad.nmi_paper import YEAR_2012, column_kind, impute_nmi
+# YEAR_2013 is commented out in denguecad.nmi_paper; NMI imputation uses 2012.
 
 ROOT = Path(__file__).resolve().parents[1]
 ATTACH = Path(
@@ -134,8 +135,9 @@ def main() -> None:
         print(f"\n=== {label}: {truth.shape[0]} rows, {len(selected)} masked rows, "
               f"{int(mask.to_numpy().sum())} cells ===")
         print("kinds:", kinds)
-        for year in (YEAR_2012, YEAR_2013):
-            imputed = impute_nmi(masked, decision, year=year)
+        # for year in (YEAR_2012, YEAR_2013):  # 2013 method is commented out
+        for year in (YEAR_2012,):
+            imputed = impute_nmi(masked, decision)
             cells = _cell_rows(truth, imputed, mask, decision)
             cells.insert(0, "dataset", label)
             cells.insert(1, "method", year)

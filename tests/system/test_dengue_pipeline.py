@@ -1,8 +1,5 @@
 """
-System tests: NMI + DengueCAD end-to-end on dengue surveillance-style data.
-
-These exercise the real sibling library and a dengue sample. They are slower
-than unit tests and require ``NMI_ROOT`` or a sibling ``../NMI`` checkout.
+System tests: 2012 NMI + DengueCAD end-to-end on dengue surveillance-style data.
 """
 
 from __future__ import annotations
@@ -11,7 +8,7 @@ import pandas as pd
 import pytest
 
 from denguecad.feature_selection import GAWrapperConfig, select_influential_features
-from denguecad.nmi_support import import_nmilib
+from denguecad.nmi_paper import impute_nmi
 
 pytestmark = pytest.mark.system
 
@@ -19,25 +16,24 @@ FEATURES = ["Fever", "Headache", "JointPain", "Bleeding"]
 DECISION = "Dengue"
 
 
-def test_nmi_imputation_roundtrip(dengue_sample, nmi_root):
-    nmilib = import_nmilib(nmi_root)
+def test_nmi_imputation_roundtrip(dengue_sample):
     df = dengue_sample.copy()
     # Inject a few missing attribute values with known decisions
     work = df.dropna(subset=[DECISION]).head(200).copy()
     assert not work.empty
     work.loc[work.index[0], "Fever"] = pd.NA
     work.loc[work.index[1], "Bleeding"] = pd.NA
-    imputed = nmilib.non_parametric_imputation(
+    imputed = impute_nmi(
         work[[*FEATURES, DECISION]],
-        decision_col=DECISION,
-        feature_cols=FEATURES,
+        DECISION,
+        FEATURES,
     )
     assert imputed["Fever"].isna().sum() == 0
     assert imputed["Bleeding"].isna().sum() == 0
     assert imputed[DECISION].isna().sum() == 0
 
 
-def test_ga_wrapper_on_dengue_sample(dengue_sample, nmi_root):
+def test_ga_wrapper_on_dengue_sample(dengue_sample):
     cfg = GAWrapperConfig(
         population_size=10,
         n_generations=6,
@@ -47,7 +43,6 @@ def test_ga_wrapper_on_dengue_sample(dengue_sample, nmi_root):
         classifier="tree",
         scoring="accuracy",
         impute_missing=True,
-        nmi_root=str(nmi_root),
         random_state=42,
         verbose=False,
     )
@@ -64,7 +59,7 @@ def test_ga_wrapper_on_dengue_sample(dengue_sample, nmi_root):
     assert len(result.history) == cfg.n_generations + 1
 
 
-def test_pipeline_impute_then_select_is_deterministic_enough(dengue_sample, nmi_root):
+def test_pipeline_impute_then_select_is_deterministic_enough(dengue_sample):
     """Same seed should yield the same selected subset."""
     cfg = GAWrapperConfig(
         population_size=8,
@@ -72,7 +67,6 @@ def test_pipeline_impute_then_select_is_deterministic_enough(dengue_sample, nmi_
         n_folds=3,
         classifier="tree",
         impute_missing=True,
-        nmi_root=str(nmi_root),
         random_state=11,
         verbose=False,
     )

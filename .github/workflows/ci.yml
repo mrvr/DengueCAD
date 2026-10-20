@@ -56,10 +56,6 @@ jobs:
     needs: inspect-tests
     steps:
       - uses: actions/checkout@v4
-      - name: Clone NMI library
-        run: |
-          git clone --depth 1 https://github.com/mrvr/NMI.git "$HOME/NMI"
-          echo "NMI_ROOT=$HOME/NMI" >> "$GITHUB_ENV"
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
@@ -68,8 +64,6 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           python -m pip install -r requirements.txt
-          # NMI runtime deps used by system tests
-          python -m pip install -r "$NMI_ROOT/requirements.txt"
       - name: Run system tests
         run: python -m pytest -q -m system --junitxml=system-results.xml
       - uses: actions/upload-artifact@v4

@@ -2,7 +2,7 @@
 Missing-value imputation benchmark: NMI vs common baselines.
 
 Compares, on a complete-case master with controlled masking:
-  - NM  — non-parametric imputation (sibling NMI / nmilib)
+  - NM  — 2012 non-parametric imputation (denguecad.nmi_paper)
   - Mode — column-wise most frequent (categoricals) / mean (numeric)
   - Mean — column-wise mean (encoded categoricals treated as numeric)
   - Median
@@ -24,7 +24,7 @@ from sklearn.experimental import enable_iterative_imputer  # noqa: F401
 from sklearn.impute import IterativeImputer, KNNImputer, SimpleImputer
 from sklearn.preprocessing import LabelEncoder
 
-from denguecad.nmi_support import import_nmilib
+from denguecad.nmi_paper import impute_nmi as impute_nmi_2012
 
 DEFAULT_DATA = (
     Path(__file__).resolve().parents[1] / "data" / "dataset.csv"
@@ -233,46 +233,18 @@ def _score_imputed(
 
 def impute_nmi(
     data: pd.DataFrame,
-    feature_cols: Sequence[str],
     decision_col: str,
+    feature_cols: Sequence[str] | None = None,
     *,
-    nmi_root: Optional[str] = None,
     categorical_cols: Optional[Sequence[str]] = None,
 ) -> pd.DataFrame:
-    nmilib = import_nmilib(nmi_root)
-    subset = data[[*feature_cols, decision_col]].copy()
-    # Keep categoricals / integer codes as int so NMI uses counting (not mean)
-    cat = set(categorical_cols or [])
-    for col in list(feature_cols) + [decision_col]:
-        if col in cat or col == decision_col:
-            # nullable int → object/float NaN safe for nmilib after float nan
-            s = subset[col]
-            mask = s.notna()
-            out = s.astype(float)
-            out.loc[mask] = s.loc[mask].astype(int).astype(float)
-            subset[col] = out
-            # Force integer dtype where complete for kind detection on donors
-    # Cast fully-observed integer-like columns to Int64-friendly float that
-    # only contain whole numbers — nmilib treats non-{0,1} floats as fractional.
-    # Re-encode those columns as pandas Int64 with NaN for NMI prepare path:
-    for col in feature_cols:
-        if col in cat:
-            vals = subset[col]
-            as_int = pd.Series(pd.NA, index=vals.index, dtype="Int64")
-            m = vals.notna()
-            as_int.loc[m] = vals.loc[m].round().astype(int)
-            subset[col] = as_int
-    if decision_col in subset.columns:
-        subset[decision_col] = subset[decision_col].round().astype(int)
-
-    imputed = nmilib.non_parametric_imputation(
-        subset,
-        decision_col=decision_col,
-        feature_cols=list(feature_cols),
+    """Fill missing features with the 2012 NMI procedure."""
+    return impute_nmi_2012(
+        data,
+        decision_col,
+        list(feature_cols) if feature_cols is not None else None,
+        categorical_cols=list(categorical_cols) if categorical_cols is not None else None,
     )
-    out = data.copy()
-    out[list(feature_cols)] = imputed[list(feature_cols)]
-    return out
 
 
 def impute_simple(
@@ -333,7 +305,6 @@ def run_benchmark(
     *,
     mv_frac: float = 0.12,
     seed: int = 42,
-    nmi_root: Optional[str] = None,
     max_complete_rows: int = 300,
 ) -> pd.DataFrame:
     """
@@ -362,9 +333,8 @@ def run_benchmark(
             "NM (NMI)",
             lambda d: impute_nmi(
                 d,
-                enc.feature_cols,
                 enc.decision_col,
-                nmi_root=nmi_root,
+                enc.feature_cols,
                 categorical_cols=enc.categorical_cols,
             ),
         ),
@@ -424,7 +394,6 @@ def impute_natural_missing(
     path: str | Path = DEFAULT_DATA,
     *,
     method: str = "nmi",
-    nmi_root: Optional[str] = None,
     out_path: Optional[str | Path] = None,
 ) -> pd.DataFrame:
     """
@@ -436,8 +405,10 @@ def impute_natural_missing(
 
     if method == "nmi":
         filled = impute_nmi(
-            data, enc.feature_cols, enc.decision_col,
-            nmi_root=nmi_root, categorical_cols=enc.categorical_cols,
+            data,
+            enc.decision_col,
+            enc.feature_cols,
+            categorical_cols=enc.categorical_cols,
         )
     elif method == "mode":
         filled = impute_simple(data, enc.feature_cols, enc.categorical_cols, strategy="mode")

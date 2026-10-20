@@ -126,7 +126,7 @@ def run_imputers(
     as_float = masked.astype(float)
     runners: dict[str, Callable[[], pd.DataFrame]] = {
         "NMI": lambda: impute_nmi(
-            masked, feature_cols, decision_col, categorical_cols=feature_cols
+            masked, decision_col, feature_cols, categorical_cols=list(feature_cols)
         ),
         "MICE": lambda: impute_mice(as_float, feature_cols, random_state=seed),
         "kNN": lambda: impute_knn(as_float, feature_cols),

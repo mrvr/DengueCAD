@@ -1,14 +1,13 @@
 """
-Bridge to the sibling NMI project (https://github.com/mrvr/NMI).
+Optional locator for a sibling NMI checkout.
 
-Resolves ``nmilib`` from a local checkout so DengueCAD can call
-``non_parametric_imputation`` without installing NMI as a package.
+NMI imputation does not use that library. Every imputation call goes to
+``denguecad.nmi_paper.impute_nmi`` (IEEE TITB 2012).
 """
 
 from __future__ import annotations
 
 import os
-import sys
 from pathlib import Path
 from typing import Optional
 
@@ -40,18 +39,17 @@ def resolve_nmi_root(nmi_root: Optional[str | Path] = None) -> Path:
     return root
 
 
-def ensure_nmi_on_path(nmi_root: Optional[str | Path] = None) -> Path:
-    """Insert the NMI project directory on ``sys.path`` and return its path."""
-    root = resolve_nmi_root(nmi_root)
-    root_str = str(root)
-    if root_str not in sys.path:
-        sys.path.insert(0, root_str)
-    return root
-
-
-def import_nmilib(nmi_root: Optional[str | Path] = None):
-    """Import and return the ``nmilib`` module from the local NMI checkout."""
-    ensure_nmi_on_path(nmi_root)
-    import nmilib  # type: ignore
-
-    return nmilib
+# def ensure_nmi_on_path(nmi_root: Optional[str | Path] = None) -> Path:
+#     """Bypassed. The sibling nmilib is not placed on sys.path."""
+#     root = resolve_nmi_root(nmi_root)
+#     root_str = str(root)
+#     if root_str not in sys.path:
+#         sys.path.insert(0, root_str)
+#     return root
+#
+#
+# def import_nmilib(nmi_root: Optional[str | Path] = None):
+#     """Bypassed. Call denguecad.nmi_paper.impute_nmi (2012) instead."""
+#     ensure_nmi_on_path(nmi_root)
+#     import nmilib  # type: ignore
+#     return nmilib

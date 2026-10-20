@@ -8,8 +8,6 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from denguecad.nmi_support import resolve_nmi_root
-
 ROOT = Path(__file__).resolve().parents[1]
 DATA_DIR = ROOT / "data"
 
@@ -34,14 +32,6 @@ def data_dir() -> Path:
     if not DATA_DIR.is_dir():
         pytest.skip(f"Local data directory missing: {DATA_DIR}")
     return DATA_DIR
-
-
-@pytest.fixture(scope="session")
-def nmi_root() -> Path:
-    try:
-        return resolve_nmi_root()
-    except FileNotFoundError:
-        pytest.skip("NMI library not available (set NMI_ROOT or clone sibling NMI)")
 
 
 @pytest.fixture(scope="session")

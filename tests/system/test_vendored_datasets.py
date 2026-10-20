@@ -7,7 +7,7 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-from denguecad.nmi_support import import_nmilib
+from denguecad.nmi_paper import impute_nmi
 
 pytestmark = pytest.mark.system
 
@@ -29,8 +29,7 @@ def test_vendored_data_files_present(data_dir: Path):
 
 
 @pytest.mark.parametrize("filename", SMALL_DATASETS)
-def test_nmi_impute_small_datasets(data_dir: Path, nmi_root: Path, filename: str):
-    nmilib = import_nmilib(nmi_root)
+def test_nmi_impute_small_datasets(data_dir: Path, filename: str):
     path = data_dir / filename
     df = pd.read_csv(path, na_values=["", "?"])
     assert "dec" in df.columns or df.columns[-1]
@@ -43,14 +42,12 @@ def test_nmi_impute_small_datasets(data_dir: Path, nmi_root: Path, filename: str
     # Need at least one complete donor
     if work.dropna().empty:
         pytest.skip(f"{filename}: no complete donor rows")
-    imputed = nmilib.non_parametric_imputation(
-        work,
-        decision_col=decision_col,
-        feature_cols=feature_cols,
-    )
-    # Attribute MVs on known-decision rows should be filled
+    imputed = impute_nmi(work, decision_col, feature_cols)
+    # 2012 needs one shared observed column to score a donor. Rows whose
+    # features are all missing stay missing; every other known-decision row is filled.
     known = imputed.dropna(subset=[decision_col])
-    assert known[feature_cols].isna().sum().sum() == 0
+    can_score = work[feature_cols].notna().any(axis=1)
+    assert known.loc[can_score, feature_cols].isna().sum().sum() == 0
 
 
 def test_paper_example_loads(paper_example_df: pd.DataFrame):

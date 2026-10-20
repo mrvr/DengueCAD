@@ -175,7 +175,7 @@ def main() -> None:
 
     methods.extend(
         [
-            ("NM (NMI)", lambda d: impute_nmi(d, FEATURE_COLS, DECISION, categorical_cols=[])),
+            ("NM (NMI)", lambda d: impute_nmi(d, DECISION, FEATURE_COLS)),
             ("Mode/Mean", lambda d: impute_simple(d, FEATURE_COLS, [], strategy="mode")),
             ("Mean", lambda d: impute_simple(d, FEATURE_COLS, [], strategy="mean")),
             ("Median", lambda d: impute_simple(d, FEATURE_COLS, [], strategy="median")),

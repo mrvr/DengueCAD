@@ -25,7 +25,7 @@ from sklearn.metrics import accuracy_score, roc_auc_score
 from sklearn.model_selection import StratifiedKFold
 
 from denguecad.classifiers import ClassifierFactory, get_classifier_factory
-from denguecad.nmi_support import import_nmilib
+from denguecad.nmi_paper import impute_nmi
 
 
 @dataclass
@@ -46,9 +46,8 @@ class GAWrapperConfig:
     random_state: int = 42
     min_features: int = 1
     verbose: bool = False
-    # If True, run NMI imputation before selection when MVs are present
+    # If True, run the 2012 NMI imputation before selection when MVs are present
     impute_missing: bool = True
-    nmi_root: Optional[str] = None
 
 
 @dataclass
@@ -204,7 +203,6 @@ def _maybe_impute(
     feature_cols: Sequence[str],
     *,
     enabled: bool,
-    nmi_root: Optional[str],
 ) -> pd.DataFrame:
     work = data.copy()
     if not enabled:
@@ -212,12 +210,7 @@ def _maybe_impute(
     subset = work[[*feature_cols, decision_col]]
     if not subset.isna().any().any():
         return work
-    nmilib = import_nmilib(nmi_root)
-    imputed = nmilib.non_parametric_imputation(
-        subset,
-        decision_col=decision_col,
-        feature_cols=list(feature_cols),
-    )
+    imputed = impute_nmi(subset, decision_col, list(feature_cols))
     out = work.copy()
     out[list(feature_cols)] = imputed[list(feature_cols)]
     return out
@@ -277,7 +270,6 @@ def select_influential_features(
         decision_col,
         feature_cols,
         enabled=cfg.impute_missing,
-        nmi_root=cfg.nmi_root,
     )
 
     # Remaining MVs (e.g. held-out) — drop incomplete feature rows for CV

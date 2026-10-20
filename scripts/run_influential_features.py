@@ -19,15 +19,13 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from denguecad.feature_selection import GAWrapperConfig, select_influential_features
-from denguecad.nmi_support import resolve_nmi_root
 
 
-def load_dengue(nmi_root: Path, rows: int | None) -> pd.DataFrame:
-    """Prefer vendored ``data/dengue.csv``; fall back to NMI checkout."""
-    local = ROOT / "data" / "dengue.csv"
-    path = local if local.is_file() else nmi_root / "dengue.csv"
+def load_dengue(rows: int | None, csv_path: Path | None) -> pd.DataFrame:
+    """Load vendored ``data/dengue.csv``, or an explicit CSV path."""
+    path = csv_path if csv_path is not None else ROOT / "data" / "dengue.csv"
     if not path.is_file():
-        raise FileNotFoundError(f"Expected dengue.csv at {local} or {nmi_root}")
+        raise FileNotFoundError(f"Expected dengue.csv at {path}")
     df = pd.read_csv(path, na_values=["", "?"])
     if rows is not None:
         df = df.head(rows)
@@ -36,7 +34,7 @@ def load_dengue(nmi_root: Path, rows: int | None) -> pd.DataFrame:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="GA wrapper influential feature selection")
-    parser.add_argument("--nmi-root", default=None, help="Path to local NMI checkout")
+    parser.add_argument("--csv", default=None, help="Dengue CSV (default: data/dengue.csv)")
     parser.add_argument("--rows", type=int, default=400, help="Row subsample (None = all)")
     parser.add_argument("--population", type=int, default=20)
     parser.add_argument("--generations", type=int, default=15)
@@ -47,9 +45,9 @@ def main() -> None:
     parser.add_argument("--verbose", action="store_true", default=True)
     args = parser.parse_args()
 
-    nmi_root = resolve_nmi_root(args.nmi_root)
-    df = load_dengue(nmi_root, args.rows)
-    print(f"Loaded {len(df)} rows (vendored data/ or NMI checkout)")
+    csv_path = Path(args.csv) if args.csv else None
+    df = load_dengue(args.rows, csv_path)
+    print(f"Loaded {len(df)} rows")
     print(f"Columns: {list(df.columns)}")
 
     cfg = GAWrapperConfig(
@@ -61,7 +59,6 @@ def main() -> None:
         scoring=args.scoring,
         classifier=args.classifier,
         impute_missing=not args.no_impute,
-        nmi_root=str(nmi_root),
         verbose=args.verbose,
     )
     result = select_influential_features(

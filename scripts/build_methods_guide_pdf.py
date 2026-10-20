@@ -410,7 +410,7 @@ def imputation_section(story: list) -> None:
               "<b>mode = yes</b>. Their platelet counts are 90k, 110k, 100k → <b>mean = 100k</b>."),
         ],
         settings=[
-            ("Implementation", "nmilib.non_parametric_imputation (sibling NMI repository)"),
+            ("Implementation", "denguecad.nmi_paper.impute_nmi (IEEE TITB 2012)"),
             ("Donors", "Complete records only; rows with a missing decision are not imputed"),
             ("Neighbours", "All donors with z(d) ≤ 0 (no k to tune)"),
             ("Fill rule", "Mode for categorical / integer, mean for fractional / real"),

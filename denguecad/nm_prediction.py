@@ -21,7 +21,7 @@ from sklearn.model_selection import StratifiedKFold
 from denguecad.baselines import make_adt
 from denguecad.feature_selection import GAWrapperConfig, select_influential_features
 from denguecad.metrics import PerformanceResult, compute_performance, scores_from_estimator
-from denguecad.nmi_support import import_nmilib
+from denguecad.nmi_paper import impute_nmi
 
 
 @dataclass
@@ -43,7 +43,6 @@ class NMPredictionConfig:
     )
     adt_estimators: int = 40
     random_state: int = 42
-    nmi_root: Optional[str] = None
     verbose: bool = False
 
 
@@ -89,12 +88,7 @@ class NMPrediction:
         subset = work[[*feature_cols, decision_col]]
         if not subset.isna().any().any():
             return work
-        nmilib = import_nmilib(self.config.nmi_root or self.config.ga.nmi_root)
-        imputed = nmilib.non_parametric_imputation(
-            subset,
-            decision_col=decision_col,
-            feature_cols=list(feature_cols),
-        )
+        imputed = impute_nmi(subset, decision_col, list(feature_cols))
         out = work.copy()
         out[list(feature_cols)] = imputed[list(feature_cols)]
         return out
@@ -122,7 +116,6 @@ class NMPrediction:
         ga_cfg = cfg.ga
         ga_cfg.classifier = "adt"
         ga_cfg.impute_missing = False  # already imputed
-        ga_cfg.nmi_root = cfg.nmi_root or ga_cfg.nmi_root
         ga_cfg.random_state = cfg.random_state
         if cfg.verbose:
             ga_cfg.verbose = True

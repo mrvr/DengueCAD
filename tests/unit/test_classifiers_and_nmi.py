@@ -6,7 +6,7 @@ import pytest
 
 from denguecad import __version__
 from denguecad.classifiers import get_classifier_factory, make_decision_tree, make_svm_rbf
-from denguecad.nmi_support import ensure_nmi_on_path, resolve_nmi_root
+from denguecad.nmi_paper import impute_nmi
 
 pytestmark = pytest.mark.unit
 
@@ -31,10 +31,10 @@ def test_unknown_classifier_raises():
         get_classifier_factory("not-a-model")
 
 
-def test_resolve_nmi_root_or_skip():
-    try:
-        root = resolve_nmi_root()
-    except FileNotFoundError:
-        pytest.skip("NMI not present locally")
-    assert (root / "nmilib.py").is_file()
-    ensure_nmi_on_path(root)
+def test_nmi_call_uses_2012_signature():
+    import inspect
+
+    params = list(inspect.signature(impute_nmi).parameters)
+    assert params[:3] == ["data", "decision_col", "feature_cols"]
+    assert "nmi_root" not in params
+    assert "year" not in params
